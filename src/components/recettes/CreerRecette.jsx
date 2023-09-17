@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { GetError } from "./erreurs/Erreurs"
+import {URL} from './Urls.jsx'
+
 
 /**
  * composant du titre de la recette
@@ -44,7 +46,7 @@ function CreerRecetteIngredients ({ing}) {
  * @param {*} param le textarea
  * @returns un formulaire
  */
-function CreerRecetteForm ({textArea, setTextArea, creerRecette}) {
+function CreerRecetteForm ({textArea, setTextArea, creerRecette, erreur}) {
     
     const handleChange = (e) => {
         setTextArea(e.target.input)
@@ -55,16 +57,23 @@ function CreerRecetteForm ({textArea, setTextArea, creerRecette}) {
             <div className="form-group mb-3">
                 <textarea className="form-control" name="txt" onChange={handleChange} rows="10"></textarea>
             </div>
-            <button type="submit" className="btn btn-primary">Enregistrer la recette</button>
+                {/* disable le bouton si l'utilisateur n'est pas admin */}
+                {erreur === 2 ? (
+                    <button type="submit" className="btn btn-primary">Enregistrer la recette</button>) : 
+                    (<button type="submit" disabled className="btn btn-primary">Enregistrer la recette</button>) 
+                } 
         </form>
     ) 
 }
 
 
-export function CreerRecette ({ing, setIng, setRecette, err, setErr, setQte}) {
+export function CreerRecette ({ing, setIng, setRecette, err, setErr, setQte, erreur}) {
 
     const [textArea, setTextArea] = useState("")
     const [title, setTitle] = useState("")
+
+    // afficher ou non le formulaire en fonction de l'enregistrement de la recette
+    const [envoye, setEnvoye] = useState(false)
 
     // ré-initialisation des states et formulaires
     // setErr(0), setIng, setQte => voir dans le fichier Ingredients.jsx, function Ingredients
@@ -99,7 +108,7 @@ export function CreerRecette ({ing, setIng, setRecette, err, setErr, setQte}) {
 
     // ajax entrée en bdd
     const entreeBdd = async (data) => {
-        await fetch("http://localhost:3001/mysqlSaveRecette", {
+        await fetch(URL + "mysqlSaveRecette", {
             method : "post",
             body : JSON.stringify(data),
             headers: {'Content-Type': 'application/json;charset=utf-8'}
@@ -124,17 +133,21 @@ export function CreerRecette ({ing, setIng, setRecette, err, setErr, setQte}) {
             ingredients: mefIngredients(),
             commentaire: e.target[0].value
         })
-        
+        setEnvoye(true)
     }
 
-   
-    return (
+    // changement d'affichage si le formulaire est validé
+    return envoye ? (
+        <div>
+            <GetError err={err}/>
+        </div>
+    ) : (
         <div>
             <GetError err={err}/>
             <button onClick={handleRecette} className="btn btn-primary mb-4">Retour à la liste des ingrédients</button>
             <CreerRecetteTitle setTitle={setTitle} />
             <CreerRecetteIngredients ing={ing}/>
-            <CreerRecetteForm textArea={textArea} setTextArea={setTextArea} creerRecette={creerRecette} />
+            <CreerRecetteForm textArea={textArea} setTextArea={setTextArea} creerRecette={creerRecette} erreur={erreur} />
         </div>
     )
 }

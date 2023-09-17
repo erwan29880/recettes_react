@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Delete, Ok } from "./icons/Icons"
 import { GetError, ErrorBoundary } from "./erreurs/Erreurs"
 import {CreerRecette} from "./CreerRecette"
+import {URL} from './Urls.jsx'
 
 
 /**
@@ -101,6 +102,7 @@ function AjouterIngredient ({ingred, ing, qte, setIngred, setIng, setQte}) {
  */
 function ListeIngredients ({qte, ingred, ing, setQte, setIng}) {
 
+    // ajouter un ingrédient à la liste des ingrédients
     const handleSubmit = (id, ingredient, unite) => {
         if (qte[id] === undefined){
             return;
@@ -115,6 +117,7 @@ function ListeIngredients ({qte, ingred, ing, setQte, setIng}) {
         setIng(arr)   
     }
 
+    // changement de la quantité par ingrédient
     const handleQte = (e, id) => {
         e.preventDefault()
         const dic = {...qte}
@@ -142,7 +145,7 @@ function ListeIngredients ({qte, ingred, ing, setQte, setIng}) {
  * enregistre un recette en bdd
  * @returns une page avec la liste des ingrédients ou la création de la recette
  */
-function Ingredients () {
+function Ingredients ({erreur}) {
     
     const [ingred, setIngred] = useState([])
     const [qte, setQte] = useState({})
@@ -152,7 +155,8 @@ function Ingredients () {
     
     // ajax
     const fetchData = async () => {
-        await fetch("http://localhost:3001/mysqlGetIngredients")
+        const url = URL + "mysqlGetIngredients"
+        await fetch(url)
           .then(response => response.json())
           .then(data => {
             setIngred(data)
@@ -169,7 +173,7 @@ function Ingredients () {
         setRecette(true)
     }
 
- 
+    // changement d'affichage lors de la sélection des ingrédients / création du titre et commentaires
     return recette ? (
         <div>
             <ErrorBoundary>
@@ -181,7 +185,7 @@ function Ingredients () {
         </div>
     ) :
     <div>
-            <CreerRecette ingred={ingred} ing={ing} setIng={setIng} setRecette={setRecette} err={err} setErr={setErr} setQte={setQte} />
+        <CreerRecette ingred={ingred} ing={ing} setIng={setIng} setRecette={setRecette} err={err} setErr={setErr} setQte={setQte} erreur={erreur}/>
     </div>
 }
 

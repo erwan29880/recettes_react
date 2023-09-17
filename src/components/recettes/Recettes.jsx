@@ -1,6 +1,19 @@
 import { useState, useEffect } from "react"
 import { Delete } from "./icons/Icons"
 import { ErrorBoundary } from "./erreurs/Erreurs"
+import {URL} from './Urls.jsx'
+
+/**
+ * problèmes des caractères html échappés du textarea
+ * @param {String} str 
+ * @returns String
+ */
+function specialsChars (str) {
+    str = str.replace(/(&#39;)/g,"'")
+    str = str.replace(/(&quot;)/g,'"')
+    str = str.replace(/(&gt;)/g,">")
+    return str.replace(/(&lt;)/g,"<")
+}
 
 /**
  * Les ingrédients proviennent de la bdd en une chaîne de caractères
@@ -37,7 +50,7 @@ function Commentaires ({commentaire, id}) {
         <div className="row border rounded mt-2 ms-3 me-3" key={`ligne${id}-2`}>
             {commentaire.split("\n").map((e, i) => {
                 return (
-                    <div className="mb-1" key={`comment${id}-${i}`}>{e}</div>
+                    <div className="mb-1" key={`comment${id}-${i}`}>{specialsChars(e)}</div>
                 )
             })}</div>
 
@@ -72,13 +85,12 @@ function Title ({titre, idListe, id}) {
  * mise en page des recettes
  * @returns les Recettes
  */
-function Recettes () {
-
+function Recettes ({erreur}) {
     const [recettes, setRecettes] = useState([])
 
     // récupérer les données en ajax
     const fetchData = async () => {
-        await fetch("http://localhost:3001/mysqlGetRecettes")
+        await fetch(URL + "mysqlGetRecettes")
           .then(response => response.json())
           .then(data => {
             setRecettes(data)
@@ -93,10 +105,9 @@ function Recettes () {
 
     // supprimer une recette
     const supprEntry = async (id) => {
-        await fetch("http://localhost:3001/mysqlSupprRecettes/"+id, {
+        await fetch(URL + "mysqlSupprRecettes/"+id, {
             method : "DELETE"
-               }).then(res => console.log(res.status))
-       await fetchData()
+            }).then(() => fetchData())
     }
 
     
@@ -115,7 +126,11 @@ function Recettes () {
                                 
                                 <Commentaires commentaire={el.commentaire} id={id} />
                                 
-                                <button key={`button${id}`} onClick={() => supprEntry(el.id)} className="btn btn-danger mt-2 ms-3"><Delete /></button>
+                                {/* supprimer uniquement si l'utilisateur est admin */}
+                                {erreur === 3 ? (
+                                <button key={`button${id}`} onClick={() => supprEntry(el.id)} disabled className="btn btn-danger mt-2 ms-3"><Delete /></button>) :
+                                (<button key={`button${id}`} onClick={() => supprEntry(el.id)} className="btn btn-danger mt-2 ms-3"><Delete /></button>)
+                                }
                             </div>
 
                         </div>
